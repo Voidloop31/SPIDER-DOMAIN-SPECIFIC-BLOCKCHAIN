@@ -1,15 +1,13 @@
 require('dotenv').config({ path: 'C:\\Users\\Pratik\\viral-marketing\\.env' });
 
-// DEBUG - print what we're reading
-console.log('AGENT_B_ADDRESS:', process.env.AGENT_B_ADDRESS);
-
 const express = require('express');
-const { paymentMiddleware } = require('x402-express');
+const x402 = require('x402-express');
 
 const app = express();
 app.use(express.json());
 
-app.use(paymentMiddleware(
+// protect this route with x402 payment
+app.use(x402.paymentMiddleware(
     process.env.AGENT_B_ADDRESS,
     {
         "/trending-topics": {
@@ -23,9 +21,10 @@ app.use(paymentMiddleware(
 ));
 
 app.get('/trending-topics', (req, res) => {
-    res.json(["#Web3", "#AI", "#ZKRollups"]);
+    var topics = ["#Web3", "#AI", "#ZKRollups"];
+    res.json(topics);
 });
 
-app.listen(3001, () => {
-    console.log('Agent B (Trend Oracle) running on port 3001');
+app.listen(3001, function() {
+    console.log('agent b is running on port 3001');
 });
