@@ -1,64 +1,59 @@
 require('dotenv').config({ path: 'C:\\Users\\Pratik\\viral-marketing\\.env' });
-const { createWalletClient, http } = require('viem');
-const { privateKeyToAccount } = require('viem/accounts');
-const { baseSepolia } = require('viem/chains');
-const { wrapFetchWithPayment } = require('x402-fetch');
 
-async function main() {
-    const account = privateKeyToAccount(process.env.AGENT_A_PRIVATE_KEY);
-    console.log('Agent A wallet:', account.address);
-    console.log('Starting campaign...\n');
+const viem = require('viem');
+const viemAccounts = require('viem/accounts');
+const viemChains = require('viem/chains');
+const x402 = require('x402-fetch');
 
-    const walletClient = createWalletClient({
-        account,
-        chain: baseSepolia,
-        transport: http('https://sepolia.base.org')
+async function runCampaign() {
+
+    const myAccount = viemAccounts.privateKeyToAccount(process.env.AGENT_A_PRIVATE_KEY);
+    console.log('my wallet address is: ' + myAccount.address);
+
+    const myWallet = viem.createWalletClient({
+        account: myAccount,
+        chain: viemChains.baseSepolia,
+        transport: viem.http('https://sepolia.base.org')
     });
 
-    const fetchWithPayment = wrapFetchWithPayment(fetch, walletClient);
+    // wrap fetch so it handles x402 payments
+    const payingFetch = x402.wrapFetchWithPayment(fetch, myWallet);
 
-    // Step 1: Pay Agent B for trending topics
-    console.log('Step 1: Paying Agent B for trending topics...');
-    const topicsResponse = await fetchWithPayment('http://localhost:3001/trending-topics');
-    const topics = await topicsResponse.json();
-    console.log('Topics received:', topics);
-    console.log('Paid Agent B $0.002 USDC ✅\n');
+    console.log('getting trending topics from agent b...');
+    var topicsRes = await payingFetch('http://localhost:3001/trending-topics');
+    var topicsList = await topicsRes.json();
+    console.log('got topics: ', topicsList);
 
-    // Step 2: For each keyword, pay Agent C then Agent D
-    for (const keyword of topics) {
-        console.log(`Processing keyword: ${keyword}`);
+    var i = 0;
+    while (i < topicsList.length) {
 
-        // Pay Agent C to generate tweet
-        console.log(`  Paying Agent C to write tweet for ${keyword}...`);
-        const tweetResponse = await fetchWithPayment(
-            'http://localhost:3002/generate-post',
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ keyword })
-            }
-        );
-        const { tweet } = await tweetResponse.json();
-        console.log(`  Tweet generated: ${tweet}`);
-        console.log(`  Paid Agent C $0.005 USDC ✅`);
+        var currentTopic = topicsList[i];
+        console.log('working on topic: ' + currentTopic);
 
-        // Pay Agent D to publish tweet
-        console.log(`  Paying Agent D to publish tweet...`);
-        const publishResponse = await fetchWithPayment(
-            'http://localhost:3003/publish-timeline',
-            {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tweet })
-            }
-        );
-        const result = await publishResponse.json();
-        console.log(`  Published: ${result.message}`);
-        console.log(`  Paid Agent D $0.001 USDC ✅\n`);
+        var tweetRes = await payingFetch('http://localhost:3002/generate-post', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ keyword: currentTopic })
+        });
+
+        var tweetData = await tweetRes.json();
+        var myTweet = tweetData.tweet;
+        console.log('tweet is ready: ' + myTweet);
+
+        // send to agent d to publish
+        var publishRes = await payingFetch('http://localhost:3003/publish-timeline', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tweet: myTweet })
+        });
+
+        var publishData = await publishRes.json();
+        console.log('publish result: ' + publishData.message);
+
+        i++;
     }
 
-    console.log('Campaign complete!');
-    console.log('Total spent: $0.002 + (3 x $0.005) + (3 x $0.001) = $0.020 USDC');
+    console.log('done! campaign finished successfully');
 }
 
-main().catch(console.error);
+runCampaign();
