@@ -43,6 +43,7 @@ Agent A is the campaign manager. It pays Agent B to get trending topics, then fo
   AGENT_C_ADDRESS=0x...
 
   AGENT_D_ADDRESS=0x...
+  
 4. Open 3 terminals and run each agent server:
 node agentB/server.js
 
