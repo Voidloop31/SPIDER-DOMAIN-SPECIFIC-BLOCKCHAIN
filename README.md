@@ -64,3 +64,5 @@ node agentA/client.js
 Agent A pays $0.002 to Agent B for trending topics.
 For each of the 3 keywords, Agent A pays $0.005 to Agent C for a tweet and $0.001 to Agent D to publish it.
 Total cost per run: $0.020 USDC
+
+VIDEO LINK: https://drive.google.com/file/d/1Qq1zUAAE9v5OaF8PMx0OacPrTWWuTmuj/view?usp=drive_link
