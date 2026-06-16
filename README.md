@@ -50,6 +50,7 @@ node agentB/server.js
 node agentC/server.js
 
 node agentD/server.js
+
 5. Run Agent A in a fourth terminal:
 node agentA/client.js
 ## On-chain Wallet Addresses
