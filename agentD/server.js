@@ -1,14 +1,14 @@
 require('dotenv').config({ path: 'C:\\Users\\Pratik\\viral-marketing\\.env' });
+
 const express = require('express');
-const { paymentMiddleware } = require('x402-express');
+const x402 = require('x402-express');
 
 const app = express();
 app.use(express.json());
 
-// Mock database - stores published tweets
-const timeline = [];
+var timeline = [];
 
-app.use(paymentMiddleware(
+app.use(x402.paymentMiddleware(
     process.env.AGENT_D_ADDRESS,
     {
         "/publish-timeline": {
@@ -21,31 +21,30 @@ app.use(paymentMiddleware(
     }
 ));
 
-app.post('/publish-timeline', (req, res) => {
-    const { tweet } = req.body;
-    
-    const post = {
+app.post('/publish-timeline', function(req, res) {
+    var tweet = req.body.tweet;
+
+    var post = {
         id: timeline.length + 1,
-        tweet,
+        tweet: tweet,
         publishedAt: new Date().toISOString()
     };
-    
+
     timeline.push(post);
-    
-    console.log(`Published tweet #${post.id}:`, tweet);
-    
-    res.json({ 
-        success: true, 
+
+    console.log('published tweet number ' + post.id + ': ' + tweet);
+
+    res.json({
+        success: true,
         message: "Tweet published!",
-        post 
+        post: post
     });
 });
 
-// View timeline (free endpoint)
-app.get('/timeline', (req, res) => {
+app.get('/timeline', function(req, res) {
     res.json(timeline);
 });
 
-app.listen(3003, () => {
-    console.log('Agent D (Decentralized Feed) running on port 3003');
+app.listen(3003, function() {
+    console.log('agent d is running on port 3003');
 });
