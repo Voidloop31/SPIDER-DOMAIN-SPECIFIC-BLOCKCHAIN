@@ -1,11 +1,12 @@
 require('dotenv').config({ path: 'C:\\Users\\Pratik\\viral-marketing\\.env' });
+
 const express = require('express');
-const { paymentMiddleware } = require('x402-express');
+const x402 = require('x402-express');
 
 const app = express();
 app.use(express.json());
 
-app.use(paymentMiddleware(
+app.use(x402.paymentMiddleware(
     process.env.AGENT_C_ADDRESS,
     {
         "/generate-post": {
@@ -18,21 +19,24 @@ app.use(paymentMiddleware(
     }
 ));
 
-app.post('/generate-post', (req, res) => {
-    const { keyword } = req.body;
-    
-    const tweets = {
-        "#Web3": `🚀 ${keyword} is revolutionizing the internet! Decentralization is not the future — it's NOW. Are you building or watching? 💡 #blockchain #crypto #buildinpublic`,
-        "#AI": `🤖 ${keyword} is changing EVERYTHING. From code to content, the machines are learning faster than ever. The question is: are YOU keeping up? 🧠⚡ #MachineLearning #tech`,
-        "#ZKRollups": `🔐 ${keyword} = the secret weapon of blockchain scaling. Lightning fast. Ultra cheap. Fully secure. The L2 revolution is HERE 🌐💥 #Ethereum #Layer2 #DeFi`
+app.post('/generate-post', function(req, res) {
+    var keyword = req.body.keyword;
+
+    var tweetOptions = {
+        "#Web3": "🚀 " + keyword + " is revolutionizing the internet! Decentralization is not the future — it's NOW. Are you building or watching? 💡 #blockchain #crypto #buildinpublic",
+        "#AI": "🤖 " + keyword + " is changing EVERYTHING. From code to content, the machines are learning faster than ever. The question is: are YOU keeping up? 🧠⚡ #MachineLearning #tech",
+        "#ZKRollups": "🔐 " + keyword + " = the secret weapon of blockchain scaling. Lightning fast. Ultra cheap. Fully secure. The L2 revolution is HERE 🌐💥 #Ethereum #Layer2 #DeFi"
     };
 
-    const tweet = tweets[keyword] || 
-        `🌟 ${keyword} is trending for a reason! The future is being built right now and early adopters always win 🏆 Don't sleep on this! #crypto #Web3 #innovation`;
+    var myTweet = tweetOptions[keyword];
 
-    res.json({ tweet });
+    if (!myTweet) {
+        myTweet = "🌟 " + keyword + " is trending for a reason! The future is being built right now and early adopters always win 🏆 Don't sleep on this! #crypto #Web3 #innovation";
+    }
+
+    res.json({ tweet: myTweet });
 });
 
-app.listen(3002, () => {
-    console.log('Agent C (Copywriter) running on port 3002');
+app.listen(3002, function() {
+    console.log('agent c is running on port 3002');
 });
